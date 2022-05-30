@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/res/app.js"></script>
+    <link rel="stylesheet" href="/res/style.css">
+    <title>{% block title %}{% if title %}{{ title }}{% else %}Mex &amp; Co.{% endif %}{% endblock %}</title>
+</head>
+<body>
+    <div class="nav">
+        <a href="/" id="home"><img src="/res/default.png">Mex &amp; Co.</a>
+        <a href="{{ url_for('menu') }}">Menu</a>
+        <a href="{{ url_for('cart') }}">Cart</a>
+        <a href="{{ url_for('login') }}">Log In</a>
+        <a class="right-nav" id="themeToggleButton">Light Theme</a>
+    </div>
+    <hr>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+    {% block beforecontent %}{% endblock %}
+    <div class="overflow">
+        <div class="wrapper">
+            <div class="content">
+                {% if err %}
+                    <span class="error">{{ err }}</span><br>
+                {% endif %}
+                {% block content %}
+                    {% if content %}
+                        {{ content }}
+                    {% else %}
+                        <h1>Oops!</h1>
+                        <p>
+                            This page hasn't loaded properly. Please refresh.
+                        </p>
+                        <span class="subtxt">
+                            If this problem persists, please contact the site administrator.
+                        </span>
+                    {% endif %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
