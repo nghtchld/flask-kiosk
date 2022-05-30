@@ -1,6 +1,8 @@
 import logging as log
 
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 from kiosk.config import Config
 from kiosk.utils import log_debug
@@ -14,16 +16,19 @@ app = Flask(__name__, static_folder="res")
 # setup flask config
 app.config.from_object(Config)
 
+# setting up sqlalchemy and alembic
+log.info("Setting up SQLAlchemy...")
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+log.info("SQLAlchemy set initialised")
+
 # setup flask routes
 log.info("Importing routes...")
-from kiosk import routes
+from kiosk import routes, models
 log.info("Finished importing routes.py")
 
-# run main.py database validation and or setup
-log.info("Importing and running main.py, DB setup.")
-import kiosk.main
-log.info("Finished importing main.py")
-
-#Start the flask server
-# log.info("Starting server...")
-# app.run(port=app.config["port"], host="127.0.0.1")
+# replaced with sqlachemy above
+# # run main.py database validation and or setup
+# log.info("Importing and running main.py, DB setup.")
+# import kiosk.main
+# log.info("Finished importing main.py")
