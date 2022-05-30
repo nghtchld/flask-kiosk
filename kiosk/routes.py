@@ -41,7 +41,7 @@ def login(DB=config.DB):
         
         user = form.username.data
         session['user'] = user
-        
+        log.debug(session)
         flash('Login requested for user {}, remember_me={}'.format(
             form.username.data, form.remember_me.data))
         return redirect(url_for('index', user=user))
