@@ -1,14 +1,15 @@
 from kiosk import app
-from flask import render_template, redirect, make_response, flash, url_for, request, session
-import logging as log
-from hashlib import blake2b
+
 import os
-
-import duckdb as db
-
+import logging as log
+from flask import render_template, redirect, make_response, flash, url_for, request, session
+from flask_login import current_user, login_user
+from werkzeug.security import generate_password_hash, check_password_hash
+# import duckdb as db
 from kiosk.config import Config
 from kiosk.utils import log_debug, Item
 from kiosk.testform import LoginForm
+from kiosk.models import User, Food
 
 log_debug()
 config = Config()
@@ -24,37 +25,28 @@ def index():
     return render_template("index.html.jinja", title="Home", user=user)
 
 @app.route("/login", methods=["GET", "POST"])
-def login(DB=config.DB):
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
-        log.debug(f"Hashing password...")
-        hashed_pw = blake2b(form.password.data.encode('utf-8')).hexdigest()
-        log.debug(f"Hashed password: {hashed_pw[32]}")
-        con = db.connect(DB)
-        log.debug(f"Saving user to main.users TABLE: {form.username.data}")
-        log.debug(f"""INSERT INTO main.users (name, pass, save) VALUES
-                    {form.username.data}, {hashed_pw[32]}, {form.remember_me.data}
-                    ;""")
-        con.execute(f"INSERT INTO main.users (uid, name, pass, save) VALUES (uuid(), '{form.username.data}', '{hashed_pw}', {form.remember_me.data});")
-        log.debug(f"User data saved.")
-        con.close()
-        
-        user = form.username.data
-        session['user'] = user
-        log.debug(session)
-        flash('Login requested for user {}, remember_me={}'.format(
-            form.username.data, form.remember_me.data))
-        return redirect(url_for('index', user=user))
-    return render_template('login.html.jinja', title = 'Sign In', form=form)
-    # if request.method == "POST":
-    #     log.info(f"Login attempt with email {request.form.get('email')} and password {request.form.get('password')}")
-    # return make_response(render_template("login.html.jinja"), 200)
+        log.debug(f"Checking username...")
+        user = User.query.filter_by(username=form.username.data).first()
+        log.debug(f"Checking password...")
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            log.info('Invalid username or password')
+            return redirect(url_for('login'))
+        log.info('Logging in user: {user}')
+        login_user(user, remember=form.remember_me.data)
+        return redirect(url_for('index'))
+    return render_template('login.html.jinja', title='Sign In', form=form)
 
 # favicon.ico (Tab Icon) because the favicon would not be accessible in the root directory (Because of the way Flask works)
 @app.route("/favicon.ico")
 def favicon():
     try:
-        with open("res/favicon.ico", "rb") as f:
+        with open("/kisok/res/favicon.ico", "rb") as f:
             r = make_response(f.read(), 200)
             r.headers["Content-Type"] = "image/x-icon"
             return r
@@ -77,21 +69,19 @@ def cart():
     return render_template("cart.html.jinja", title="Cart", order=cart)
 
 @app.route("/menu")
-def menu(DB=config.DB):
-    """Pulls menu items from main.foods table and list them
+def menu():
+    """Pulls menu items from Food model table and list them
     """
-    menu = []
-    con = db.connect(DB)
-    con.execute("SELECT * FROM main.foods")
-    menu_table = con.fetchall()
-    log.debug(f"Printing out main.foods TABLE: {menu_table}")
-    for row in menu_table:
-        log.debug(f"This is the row from line 62 {row}")
-        menu.append(Item(*row))
+    menu_list = []
+    menu = Food.query.all()
+    log.debug(f"Printing out Food model table")
+    for row in menu:
+        log.debug(f"This is the row from line 78:")
+        log.debug(f"{row.id}, {row.item}, {row.price}, {row.description}")
+        menu_list.append([row.id, row.item, round(row.price,2), row.description, row.img])
     log.debug(menu)
-    con.close()
 
-    return render_template("menu.html.jinja", title="Menu", menu=menu)
+    return render_template("menu.html.jinja", title="Menu", menu=menu_list)
 
 @app.route("/cart/<int:id>")
 def cartItem(id):
