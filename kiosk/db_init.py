@@ -3,8 +3,9 @@ import csv
 import logging as log
 from kiosk import db
 from kiosk.models import Food
+from kiosk.utils import log_func, entering, exiting
 
-
+@log_func(entering, exiting)
 def init_food_table():
     # Make sure there is data in the main.foods TABLE
     log.debug(f"Checking Food model table for contents:")

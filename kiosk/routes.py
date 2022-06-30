@@ -2,7 +2,7 @@ from kiosk import app
 
 import os
 import logging as log
-from flask import render_template, redirect, make_response, flash, url_for, request, session
+from flask import render_template, redirect, make_response, flash, url_for, session, send_from_directory
 from flask_login import current_user, login_user
 from werkzeug.security import generate_password_hash, check_password_hash
 # import duckdb as db
@@ -44,19 +44,11 @@ def login():
     return render_template('login.html.jinja', title='Sign In', form=form)
 
 # favicon.ico (Tab Icon) because the favicon would not be accessible in the root directory (Because of the way Flask works)
-@app.route("/favicon.ico")
+@app.route('/favicon.ico')
 def favicon():
-    try:
-        with open("/kiosk/res/favicon.ico", "rb") as f:
-            r = make_response(f.read(), 200)
-            r.headers["Content-Type"] = "image/x-icon"
-            return r
-    except FileNotFoundError as e:
-        log.error(str(e) + " in " + os.getcwd())
-        return make_response("", 500)
-    except Exception as e:
-        log.error(e)
-        return make_response("", 500)
+    return send_from_directory(os.path.join(app.root_path, 'res'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
 @app.route("/cart")
 def cart():
@@ -77,12 +69,10 @@ def menu():
     init_food_table()
     menu_list = []
     menu = Food.query.all()
-    log.debug(f"Printing out Food model table")
+    log.debug(f"Listing items in Food model table as menu...")
     for row in menu:
-        log.debug(f"This is the row from line {func.__code__.co_firstlineno}")
-        log.debug(f"{row.id}, {row.item}, {row.price}, {row.description}")
         menu_list.append([row.id, row.item, round(row.price,2), row.description, row.img])
-    log.debug(menu)
+    log.debug(f"Menu list is: {menu}")
 
     return render_template("menu.html.jinja", title="Menu", menu=menu_list)
 
