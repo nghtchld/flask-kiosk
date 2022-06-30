@@ -10,6 +10,7 @@ from kiosk.config import Config
 from kiosk.utils import log_debug, Item
 from kiosk.testform import LoginForm
 from kiosk.models import User, Food
+from kiosk.db_init import init_food_table
 
 log_debug()
 config = Config()
@@ -46,7 +47,7 @@ def login():
 @app.route("/favicon.ico")
 def favicon():
     try:
-        with open("/kisok/res/favicon.ico", "rb") as f:
+        with open("/kiosk/res/favicon.ico", "rb") as f:
             r = make_response(f.read(), 200)
             r.headers["Content-Type"] = "image/x-icon"
             return r
@@ -72,11 +73,13 @@ def cart():
 def menu():
     """Pulls menu items from Food model table and list them
     """
+    # check Food table for contents
+    init_food_table()
     menu_list = []
     menu = Food.query.all()
     log.debug(f"Printing out Food model table")
     for row in menu:
-        log.debug(f"This is the row from line 78:")
+        log.debug(f"This is the row from line {func.__code__.co_firstlineno}")
         log.debug(f"{row.id}, {row.item}, {row.price}, {row.description}")
         menu_list.append([row.id, row.item, round(row.price,2), row.description, row.img])
     log.debug(menu)

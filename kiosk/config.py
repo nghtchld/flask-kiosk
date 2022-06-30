@@ -13,7 +13,7 @@ load_dotenv("./.env")
 
 class Config(object):
     SECRET_KEY = os.getenv('SECRET_KEY') or 'you-will-never-guess'
-    PORT = os.getenv('PORT', '8080')
+    PORT = os.getenv('PORT', '5000')
     SALT = os.getenv('SALT')
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, os.environ.get('DATABASE'))
