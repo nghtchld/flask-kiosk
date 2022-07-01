@@ -3,12 +3,12 @@ from kiosk import app
 import os
 import logging as log
 from flask import render_template, redirect, make_response, flash, url_for, session, send_from_directory
-from flask_login import current_user, login_user
+from flask_login import current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 # import duckdb as db
 from kiosk.config import Config
 from kiosk.utils import log_debug, Item
-from kiosk.testform import LoginForm
+from kiosk.forms import LoginForm
 from kiosk.models import User, Food
 from kiosk.db_init import init_food_table
 
@@ -17,6 +17,7 @@ config = Config()
 
 #-# BEGIN ROUTE DECLARATIONS #-#
 @app.route("/")
+@app.route('/index')
 def index():
     # user = request.args['messages']
     try:
@@ -40,14 +41,23 @@ def login():
             return redirect(url_for('login'))
         log.info('Logging in user: {user}')
         login_user(user, remember=form.remember_me.data)
+        log.info(f"current_user is: {current_user}")
         return redirect(url_for('index'))
     return render_template('login.html.jinja', title='Sign In', form=form)
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
 
 # favicon.ico (Tab Icon) because the favicon would not be accessible in the root directory (Because of the way Flask works)
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'res'),
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
 
 
 @app.route("/cart")
@@ -60,6 +70,7 @@ def cart():
         Item("4", "Fish", 40, "Sea meat", "/res/default.png", {})
     ]
     return render_template("cart.html.jinja", title="Cart", order=cart)
+
 
 @app.route("/menu")
 def menu():
@@ -76,9 +87,11 @@ def menu():
 
     return render_template("menu.html.jinja", title="Menu", menu=menu_list)
 
+
 @app.route("/cart/<int:id>")
 def cartItem(id):
     return make_response(render_template("403.html.jinja"), 403)
+
 
 @app.route("/403")
 def forboden():

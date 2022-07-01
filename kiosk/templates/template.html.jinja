@@ -14,7 +14,11 @@
         <a href="/" id="home"><img src="/res/default.png">Mex &amp; Co.</a>
         <a href="{{ url_for('menu') }}">Menu</a>
         <a href="{{ url_for('cart') }}">Cart</a>
-        <a href="{{ url_for('login') }}">Log In</a>
+        {% if current_user.is_anonymous %}
+        <a href="{{ url_for('login') }}">Login</a>
+        {% else %}
+        <a href="{{ url_for('logout') }}">Logout</a>
+        {% endif %}
         <a class="right-nav" id="themeToggleButton">Light Theme</a>
     </div>
     <hr>

@@ -13,7 +13,9 @@ log_debug()
 log.info("Starting server...")
 # Define the flask app
 app = Flask(__name__, static_folder="res")
+# setup flask-login module
 login = LoginManager(app)
+login.login_view = 'login'
 
 # setup flask config
 app.config.from_object(Config)
