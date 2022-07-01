@@ -1,0 +1,13 @@
+{% extends "template.html.jinja" %}
+
+{% block title %}{{ current_user }}'s Page{% endblock %}
+
+{% block content %}
+        <h1>Welcome {{ current_user }}!</h1>
+        <p>
+            This is your page. It will* contain a list of your orders and information about your Account!
+        </p>
+        <span class="subtxt">
+            * When I get around to implementing it! :)
+        </span>
+{% endblock %}

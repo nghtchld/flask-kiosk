@@ -3,7 +3,7 @@ from kiosk import app
 import os
 import logging as log
 from flask import render_template, redirect, make_response, flash, url_for, session, send_from_directory
-from flask_login import current_user, login_user, logout_user
+from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 # import duckdb as db
 from kiosk.config import Config
@@ -52,13 +52,17 @@ def logout():
     return redirect(url_for('index'))
 
 
-# favicon.ico (Tab Icon) because the favicon would not be accessible in the root directory (Because of the way Flask works)
+# Solution from Flask Mega-Tutorial, also added <href...favicon.ico> in template.html.jinja
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(app.root_path, 'res'),
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
+@app.route('/userpage')
+@login_required
+def userpage():
+    return render_template('userpage.html.jinja')
 
 @app.route("/cart")
 def cart():
