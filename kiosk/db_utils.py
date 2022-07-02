@@ -34,7 +34,7 @@ def register_user_in_db(form):
     username = form.username.data
     email = form.email.data
     password = form.password.data
-    u = User(username, email, password)
+    u = User(username=username, email=email, password=password)
     db.session.add(u)
     db.session.commit()
     #return render_template('register.html.jinja', form = form)

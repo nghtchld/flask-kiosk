@@ -32,7 +32,7 @@ def index():
     return render_template("index.html.jinja", title="Home", user=user)
 
 
-@app.route('/register')
+@app.route('/register', methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -40,8 +40,8 @@ def register():
     if form.validate_on_submit():
         register_user_in_db(form)
         username=form.username.data
-        log.debug(f"check newly registered user '{user}' saved to db...")
         user = User.query.filter_by(username=username).first()
+        log.debug(f"check newly registered user '{user}' saved to db...")
         log.info('Logging in newly registered db user: {user}. With username {username}')
         login_user(user, remember=form.remember_me.data)
         log.info(f"current_user is: {current_user}")
