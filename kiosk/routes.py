@@ -1,13 +1,13 @@
-from duckdb import query
 from kiosk import app
+from kiosk import db
 
 import os
 import logging as log
-from flask import render_template, redirect, make_response, flash, url_for, session, send_from_directory
+from flask import render_template, redirect, make_response, flash, url_for, session, send_from_directory, request
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
-# import duckdb as db
-from kiosk import db
+from werkzeug.urls import url_parse
+
 from kiosk.config import Config
 from kiosk.utils import log_debug, Item
 from kiosk.forms import LoginForm, RegisterForm
@@ -21,14 +21,11 @@ config = Config()
 @app.route("/")
 @app.route('/index')
 def index():
-    # user = request.args['messages']
-    username=current_user
-    log.debug(f"index.html username is: {username}")
-    try:
-        user = session['user']
-        log.debug(f"index.html user is: {user}")
-    except KeyError:
+    if current_user.is_authenticated:
+        user=current_user
+    else:
         user = "Stranger"
+    log.debug(f"index.html username is: {user}")
     return render_template("index.html.jinja", title="Home", user=user)
 
 
@@ -41,10 +38,10 @@ def register():
         register_user_in_db(form)
         username=form.username.data
         user = User.query.filter_by(username=username).first()
-        log.debug(f"check newly registered user '{user}' saved to db...")
         log.info('Logging in newly registered db user: {user}. With username {username}')
         login_user(user, remember=form.remember_me.data)
         log.info(f"current_user is: {current_user}")
+        flash(f'Congratulations {username}, you are now a registered Mex&Co Compradre!')
         return redirect(url_for('index'))
     return render_template('register.html.jinja', form=form)
 
@@ -57,11 +54,10 @@ def login():
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
-        log.debug(f"Checking username: '{username}' and password {password}...")
+        log.debug(f"Checking username: '{username}'...")
         user = User.query.filter_by(username=username).first()
-        log.debug(f"user obj from db is: {user}")
         if user is None:
-            log.debug(f"Unknown user. Redirecting to 'register'.")
+            log.info(f"Unknown user. Redirecting to 'register'.")
             return redirect(url_for('register'))
         elif user.check_password(password) == 0:
             db.session.delete(user)
@@ -72,13 +68,18 @@ def login():
             return redirect(url_for('login'))
         log.info('Logging in db user: {user}. With username {username}')
         login_user(user, remember=form.remember_me.data)
-        log.info(f"current_user is: {current_user}")
-        return redirect(url_for('index'))
+        log.info(f"'{current_user.username}' has logged in.")
+        # Check for a next (page) URL argument
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('index')
+        return redirect(next_page)
     return render_template('login.html.jinja', title='Sign In', form=form)
 
 
 @app.route('/logout')
 def logout():
+    log.info(f"'{current_user.username}' has logged out.")
     logout_user()
     return redirect(url_for('index'))
 
@@ -115,11 +116,8 @@ def menu():
     init_food_table()
     menu_list = []
     menu = Food.query.all()
-    log.debug(f"Listing items in Food model table as menu...")
     for row in menu:
         menu_list.append([row.id, row.item, round(row.price,2), row.description, row.img])
-    log.debug(f"Menu list is: {menu}")
-
     return render_template("menu.html.jinja", title="Menu", menu=menu_list)
 
 
