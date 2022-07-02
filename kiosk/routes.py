@@ -1,3 +1,4 @@
+from duckdb import query
 from kiosk import app
 
 import os
@@ -6,11 +7,12 @@ from flask import render_template, redirect, make_response, flash, url_for, sess
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 # import duckdb as db
+from kiosk import db
 from kiosk.config import Config
 from kiosk.utils import log_debug, Item
-from kiosk.forms import LoginForm
+from kiosk.forms import LoginForm, RegisterForm
 from kiosk.models import User, Food
-from kiosk.db_init import init_food_table
+from kiosk.db_utils import init_food_table, register_user_in_db
 
 log_debug()
 config = Config()
@@ -20,11 +22,32 @@ config = Config()
 @app.route('/index')
 def index():
     # user = request.args['messages']
+    username=current_user
+    log.debug(f"index.html username is: {username}")
     try:
         user = session['user']
+        log.debug(f"index.html user is: {user}")
     except KeyError:
         user = "Stranger"
     return render_template("index.html.jinja", title="Home", user=user)
+
+
+@app.route('/register')
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = RegisterForm()
+    if form.validate_on_submit():
+        register_user_in_db(form)
+        username=form.username.data
+        log.debug(f"check newly registered user '{user}' saved to db...")
+        user = User.query.filter_by(username=username).first()
+        log.info('Logging in newly registered db user: {user}. With username {username}')
+        login_user(user, remember=form.remember_me.data)
+        log.info(f"current_user is: {current_user}")
+        return redirect(url_for('index'))
+    return render_template('register.html.jinja', form=form)
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -32,14 +55,22 @@ def login():
         return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
-        log.debug(f"Checking username...")
-        user = User.query.filter_by(username=form.username.data).first()
-        log.debug(f"Checking password...")
-        if user is None or not user.check_password(form.password.data):
+        username = form.username.data
+        password = form.password.data
+        log.debug(f"Checking username: '{username}' and password {password}...")
+        user = User.query.filter_by(username=username).first()
+        log.debug(f"user obj from db is: {user}")
+        if user is None:
+            log.debug(f"Unknown user. Redirecting to 'register'.")
+            return redirect(url_for('register'))
+        elif user.check_password(password) == 0:
+            db.session.delete(user)
+            return redirect(url_for('register'))
+        elif not user.check_password(password):
             flash('Invalid username or password')
-            log.info('Invalid username or password')
+            log.info('Invalid password!')
             return redirect(url_for('login'))
-        log.info('Logging in user: {user}')
+        log.info('Logging in db user: {user}. With username {username}')
         login_user(user, remember=form.remember_me.data)
         log.info(f"current_user is: {current_user}")
         return redirect(url_for('index'))
