@@ -11,7 +11,7 @@ from werkzeug.urls import url_parse
 
 from kiosk.config import Config
 from kiosk.utils import log_debug, Item
-from kiosk.forms import LoginForm, RegisterForm
+from kiosk.forms import LoginForm, RegisterForm, EditProfileForm
 from kiosk.models import User, Food
 from kiosk.db_utils import init_food_table, register_user_in_db
 
@@ -34,7 +34,7 @@ def index():
     else:
         user = "Stranger"
     log.debug(f"index.html username is: {user}")
-    return render_template("index.html.jinja", title="Home", user=user)
+    return render_template("index.html.jinja", title="Home")#, user=user)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -74,9 +74,9 @@ def login():
             flash('Invalid username or password')
             log.info('Invalid password!')
             return redirect(url_for('login'))
-        log.info('Logging in db user: {user}. With username {username}')
+        log.info(f"Logging in db user: {user}. With username {username}")
         login_user(user, remember=form.remember_me.data)
-        log.info(f"'{current_user.username}' has logged in.")
+        log.info(f"User '{current_user.username}' has logged in.")
         # Check for a next (page) URL argument
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
@@ -87,7 +87,7 @@ def login():
 
 @app.route('/logout')
 def logout():
-    log.info(f"'{current_user.username}' has logged out.")
+    log.info(f"User '{current_user.username}' has logged out.")
     logout_user()
     return redirect(url_for('index'))
 
@@ -112,6 +112,22 @@ def userpage(username):
     # sample actual order code might be like:
     # orders = user.orders.all()
     return render_template('userpage.html.jinja', user=user, orders=orders)
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    form = EditProfileForm()
+    if form.validate_on_submit():
+        current_user.username = form.username.data
+        current_user.about_me = form.about_me.data
+        db.session.commit()
+        flash('Your changes have been saved.')
+        return redirect(url_for('edit_profile'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.about_me.data = current_user.about_me
+    return render_template('edit_profile.html.jinja', title='Edit Profile', form=form)
+
 
 @app.route("/cart")
 def cart():
