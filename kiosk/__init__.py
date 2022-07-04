@@ -28,7 +28,7 @@ log.info("SQLAlchemy initialised")
 
 # setup flask routes
 log.info("Importing routes...")
-from kiosk import routes, models
+from kiosk import routes, models, errors
 log.info("Finished importing routes.py")
 
 # run main.py database validation and or setup

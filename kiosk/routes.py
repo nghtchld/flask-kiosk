@@ -46,7 +46,7 @@ def register():
         register_user_in_db(form)
         username=form.username.data
         user = User.query.filter_by(username=username).first()
-        log.info('Logging in newly registered db user: {user}. With username {username}')
+        log.info(f"Logging in newly registered db user: {user}. With username {username}")
         login_user(user, remember=form.remember_me.data)
         log.info(f"current_user is: {current_user}")
         flash(f'Congratulations {username}, you are now a registered Mex&Co Compradre!')
