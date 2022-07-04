@@ -3,6 +3,7 @@ from kiosk import db
 
 import os
 import logging as log
+from datetime import datetime
 from flask import render_template, redirect, make_response, flash, url_for, session, send_from_directory, request
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -16,6 +17,13 @@ from kiosk.db_utils import init_food_table, register_user_in_db
 
 log_debug()
 config = Config()
+
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.last_seen = datetime.utcnow()
+        db.session.commit()
+
 
 #-# BEGIN ROUTE DECLARATIONS #-#
 @app.route("/")
@@ -91,10 +99,19 @@ def favicon():
                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
-@app.route('/userpage')
+@app.route('/userpage/<username>')
 @login_required
-def userpage():
-    return render_template('userpage.html.jinja')
+def userpage(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    # TODO add list of user's orders, favorites etc using a _sub template
+    # below are temp placeholder 'orders' by user 'user'
+    orders = [
+        {'customer': user, 'order': 'Test order #1'},
+        {'customer': user, 'order': 'Test order #2'}
+    ]
+    # sample actual order code might be like:
+    # orders = user.orders.all()
+    return render_template('userpage.html.jinja', user=user, orders=orders)
 
 @app.route("/cart")
 def cart():

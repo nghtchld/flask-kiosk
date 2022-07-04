@@ -1,13 +1,20 @@
 {% extends "template.html.jinja" %}
 
-{% block title %}{{ current_user }}'s Page{% endblock %}
+{% block title %}{{ user.username }}'s Page{% endblock %}
 
 {% block content %}
         <h1>Welcome {{ current_user }}!</h1>
-        <p>
-            This is your page. It will* contain a list of your orders and information about your Account!
+            {% if user.last_seen %}<p>Last seen on: {{ user.last_seen }}</p>{% endif %}<p>
+            {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
+            
+            This is your user page. It will* contain a list of your orders and information about your Account!
         </p>
         <span class="subtxt">
-            * When I get around to implementing it! :)
+            * When I get around to implementing it! :) It will look something like...
         </span>
+        {% if orders %}
+            {% for order in orders %}
+                {% include '_order.html' %}
+            {% endfor %}
+        {% endif %}
 {% endblock %}

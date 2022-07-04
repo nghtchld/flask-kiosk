@@ -19,6 +19,8 @@ This repo contains a [Flask](https://palletsprojects.com/p/flask/) web applicati
     https://code.visualstudio.com/docs/python/testing
 - TODO Containerise (Docker): https://code.visualstudio.com/docs/containers/quickstart-python
 - TODO Deploy to cloud (AWS, Azure): https://code.visualstudio.com/docs/python/python-on-azure
+https://docs.microsoft.com/en-us/azure/app-service/quickstart-python?tabs=flask%2Cwindows%2Cazure-cli%2Cvscode-deploy%2Cdeploy-instructions-azportal%2Cterminal-bash%2Cdeploy-instructions-zip-azcli&pivots=python-framework-flask
+
 # Installation
 ## Use venv for virtual environment setup 
 py -m venv --prompt "flask-kiosk" --upgrade-deps c:\Users\USERNAME\.venv\flask-kiosk
