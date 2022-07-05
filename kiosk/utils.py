@@ -1,6 +1,9 @@
-from dataclasses import dataclass
 import logging as log
+from logging.handlers import RotatingFileHandler
+import os
 import time
+
+# TODO Just started with converting logging to use RotatingFileHandler
 
 log_level = log.DEBUG
 log.basicConfig(level=log_level, format='{%(asctime)s} [%(levelname)-8s]: %(message)s',
@@ -48,12 +51,3 @@ def exiting(func):
     """ Post function logging """
     logger.debug("Exited  %s", func.__name__)
 
-
-@dataclass
-class Item:
-    foodID: str
-    name: str
-    price: int
-    description: str
-    image: str
-    options: dict
