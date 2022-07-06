@@ -1,16 +1,18 @@
 {% extends "template.html.jinja" %}
 
-{% block title %}Cart{% endblock %}
+{% block title %}Menu{% endblock %}
 
 {% block content %}
     {% if menu %}
         {% for item in menu %}
-            <div class="order-item" id="{{ item[0] }}" food="{{ item[1] }}">
-                <img class="order-item-image" src="{{ item[4] }}" alt="">
-                <span class="order-item-name">{{ item[1] }}</span>
-                <br>
-                <span class="order-item-price">${{ item[2] }}</span>
-            </div>
+            <a href="{{ url_for('menu_item', itemname=item[1]) }}"> 
+                <div class="order-item" id="{{ item[0] }}" food="{{ item[1] }}">
+                    <img class="order-item-image" src="{{ item[4] }}" alt="">
+                    <span class="order-item-name">{{ item[1] }}</span>
+                    <br>
+                    <span class="order-item-price">${{ item[2] }}</span>
+                </div>
+            </a>
             <div class="order-sep"></div>
         {% endfor %}
     {% else %}

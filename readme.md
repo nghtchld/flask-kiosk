@@ -4,13 +4,12 @@ This repo contains a [Flask](https://palletsprojects.com/p/flask/) web applicati
 - Working flask/jinja website with templates (HTML, JS, CSS)
 - Working flask-sqlalchemy defined sqlite (dev) database setup with initial data insertion
 - Working Flask-WTF forms 
-- TODO clean up testform.py, main.py
+- Working clean up testform.py, main.py
 - Working session username usage (only for index atm)
-    TODO UPDATE to use flask-login: 
-    https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-v-user-logins
-- Working menu selected from db
-- TODO update logging to use wrappers for functions
+- Working menu read from db to menu page
+- Working logging uses wrappers and decorators for functions
     see https://towardsdatascience.com/using-wrappers-to-log-in-python
+Up to here - see current work plan section, below:
 - TODO Ordering system using flask-sqlalchemy Classes
 - TODO Menu item customisation on order
 - TODO Receipt prodcution with Tax and Tip
@@ -54,3 +53,16 @@ Before running the flask app you need to create and initialise the database.
 
 # Licence
 This project is licenced under the BSD 3-Clause licence. A full copy of this licene is in the `LICENCE` file. 
+
+# Current work plan
+TODO Ordering system using flask-sqlalchemy Classes
+## Needed
+* Food details page of form 'menu\<item>'
+* Dropdown number to order selection form -> displayed on food details page
+* Do we then have to write the item selection immediately to the d?b 
+** or can we store in 'session' and if so how? 
+** and then when do we write to the db?
+
+## Fixes needed
+* change menu_list in route /menu to namedtuple
+* change menu.html for item loop to use namedtuple names in place of list [ints]

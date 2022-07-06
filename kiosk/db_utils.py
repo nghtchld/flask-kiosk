@@ -3,7 +3,7 @@ import csv
 import logging as log
 from kiosk import app, db
 from kiosk.models import Food, User
-from kiosk.utils import log_func, entering, exiting
+from kiosk.utils import log_debug, log_func, entering, exiting
 
 @log_func(entering, exiting)
 def init_food_table():

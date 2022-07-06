@@ -6,6 +6,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from kiosk import db
 from kiosk import login
 
+from kiosk.utils import log_debug, log_func, entering, exiting
+log_debug()
+
 # flask-migrate alembic in use to manage db changes
 # Use cmdline >flask db migrate -m "short message"
 # to generate migration script. Inspect script if desired.
@@ -34,9 +37,11 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
 
+    @log_func(entering, exiting)
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
+    @log_func(entering, exiting)
     def check_password(self, password):
         # adding check for 0 length password hash in db
         try:
@@ -63,6 +68,11 @@ class Order(db.Model):
         order = self.order
         order_dict = {'Order': order}
         return json.dumps(order_dict)
+    
+    @log_func(entering, exiting)
+    def save_order(items):
+        """Saves the user's cart to the db"""
+        pass
 
 
 class Food(db.Model):

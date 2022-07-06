@@ -11,18 +11,21 @@ from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.urls import url_parse
 
-from kiosk.forms import LoginForm, RegisterForm, EditProfileForm
+from kiosk.forms import LoginForm, RegisterForm, EditProfileForm, MenuItemForm
 from kiosk.models import User, Food
 from kiosk.db_utils import init_food_table, register_user_in_db
 from kiosk.config import Config
 
+from kiosk.utils import log_debug, log_func, entering, exiting
+log_debug()
+
 config = Config()
 
 if config.SALT in (None, ""):
-    log.critical(".env does not contain critical 'SALT' value. Cannot continue.")
+    app.logger.critical(".env does not contain critical 'SALT' value. Cannot continue.")
     sys.exit(1)
 elif len(config.SALT) < 8:
-    log.critical(".env contains a 'SALT' value that is too short. Cannot continue.")
+    app.logger.critical(".env contains a 'SALT' value that is too short. Cannot continue.")
     sys.exit(1)
 
 @app.before_request
@@ -124,7 +127,7 @@ def userpage(username):
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
-    form = EditProfileForm()
+    form = EditProfileForm(current_user.username)
     if form.validate_on_submit():
         current_user.username = form.username.data
         current_user.about_me = form.about_me.data
@@ -153,7 +156,8 @@ def cart():
 
 @app.route("/menu")
 def menu():
-    """Pulls menu items from Food model table and list them
+    """
+    Pulls menu items from Food model table and list them
     """
     # check Food table for contents
     init_food_table()
@@ -163,6 +167,28 @@ def menu():
         menu_list.append([row.id, row.item, round(row.price,2), row.description, row.img])
     return render_template("menu.html.jinja", title="Menu", menu=menu_list)
 
+
+@app.route("/menu/<itemname>", methods=["GET", "POST"])
+def menu_item(itemname):
+    """
+    Details of the menu item with number to order selection form.
+    """
+    app.logger.info(f"Selecting item from db: '{itemname}'...")
+    item = Food.query.filter_by(item=itemname).first()
+    if not item:        
+        app.logger.debug(f"Sorry! Sold out of '{itemname}. Please select a different item.")
+    app.logger.info(f"Retrieved item from db: '{item}'.")
+    title = ' '.join('Order your', item.item)
+
+    form = MenuItemForm(default=itemname)
+    if form.validate_on_submit():
+        name = form.foodname.data
+        number = form.number.data
+        price = item.price.data
+        cost = number * price
+        flash(f"{number} {name}s added to your cart. That will cost ${cost}.")
+    return render_template("menu_item.html.jinja", title=title, form=form)
+    pass
 
 @app.route("/cart/<int:id>")
 def cartItem(id):

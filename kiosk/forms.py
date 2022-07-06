@@ -1,7 +1,14 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField
+from sqlalchemy import Integer
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, HiddenField
 from wtforms.validators import ValidationError, DataRequired, Length, Email, EqualTo
-from kiosk.models import User
+from kiosk.models import User, Food
+from kiosk.utils import log_debug, log_func, entering, exiting
+
+@log_func(entering, exiting)
+
+class EmptyForm(FlaskForm):
+    submit = SubmitField('Submit')
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
@@ -45,4 +52,22 @@ class RegisterForm(FlaskForm):
 class EditProfileForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     about_me = TextAreaField('About me', validators=[Length(min=0, max=140)])
+    submit = SubmitField('Submit')
+
+
+    def __init__(self, original_username, *args, **kwargs):
+        super(EditProfileForm, self).__init__(*args, **kwargs)
+        self.original_username = original_username
+
+    def validate_username(self, username):
+        if username.data != self.original_username:
+            user = User.query.filter_by(username=self.username.data).first()
+            if user is not None:
+                raise ValidationError('Please use a different username.')
+
+
+class MenuItemForm(FlaskForm):
+    number = SelectField('Number', choices=[i for i in range(10)], default=1, coerce=int, 
+                        validators=[DataRequired(), Length(min=1, max=2)])
+    foodname = HiddenField(validators=[DataRequired(), Length(min=1, max=64)])
     submit = SubmitField('Submit')
