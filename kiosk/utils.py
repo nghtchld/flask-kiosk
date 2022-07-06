@@ -1,23 +1,12 @@
 import logging as log
-from logging.handlers import RotatingFileHandler
-import os
-import time
-
-# TODO Just started with converting logging to use RotatingFileHandler
-
-log_level = log.DEBUG
-log.basicConfig(level=log_level, format='{%(asctime)s} [%(levelname)-8s]: %(message)s',
-                    filename=f"{time.strftime('%Y-%m-%d %H%M%S')}.log", filemode='w')
-
-def log_debug():
-    log.basicConfig(level=log.DEBUG, format='{%(asctime)s} [%(levelname)-8s]: %(message)s',
-                    filename=f"{time.strftime('%Y-%m-%d %H%M%S')}.log", filemode='w')
-
 
 logger = log.getLogger("wrap_func_logger")
 
 def log_func(pre, post):
-    """ Wrapper """
+    """ 
+    Creates decorator for wrapping and logging functions.
+    Usage: @log_func(entering,exiting)
+    """
     def decorate(func):
         """ Decorator """
         def call(*args, **kwargs):

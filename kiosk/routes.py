@@ -2,21 +2,28 @@ from kiosk import app
 from kiosk import db
 
 import os
+import sys
 import logging as log
 from datetime import datetime
+from collections import namedtuple
 from flask import render_template, redirect, make_response, flash, url_for, session, send_from_directory, request
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.urls import url_parse
 
-from kiosk.config import Config
-from kiosk.utils import log_debug, Item
 from kiosk.forms import LoginForm, RegisterForm, EditProfileForm
 from kiosk.models import User, Food
 from kiosk.db_utils import init_food_table, register_user_in_db
+from kiosk.config import Config
 
-log_debug()
 config = Config()
+
+if config.SALT in (None, ""):
+    log.critical(".env does not contain critical 'SALT' value. Cannot continue.")
+    sys.exit(1)
+elif len(config.SALT) < 8:
+    log.critical(".env contains a 'SALT' value that is too short. Cannot continue.")
+    sys.exit(1)
 
 @app.before_request
 def before_request():
@@ -30,11 +37,12 @@ def before_request():
 @app.route('/index')
 def index():
     if current_user.is_authenticated:
-        user=current_user
+        user = current_user
+        username = user.username
     else:
-        user = "Stranger"
-    log.debug(f"index.html username is: {user}")
-    return render_template("index.html.jinja", title="Home")#, user=user)
+        username = "Stranger"
+    app.logger.debug(f"index.html username is: {username}")
+    return render_template("index.html.jinja", title="Home", username=username)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -46,9 +54,9 @@ def register():
         register_user_in_db(form)
         username=form.username.data
         user = User.query.filter_by(username=username).first()
-        log.info(f"Logging in newly registered db user: {user}. With username {username}")
+        app.logger.info(f"Logging in newly registered db user: {user}. With username {username}")
         login_user(user, remember=form.remember_me.data)
-        log.info(f"current_user is: {current_user}")
+        app.logger.info(f"current_user is: {current_user}")
         flash(f'Congratulations {username}, you are now a registered Mex&Co Compradre!')
         return redirect(url_for('index'))
     return render_template('register.html.jinja', form=form)
@@ -62,21 +70,21 @@ def login():
     if form.validate_on_submit():
         username = form.username.data
         password = form.password.data
-        log.debug(f"Checking username: '{username}'...")
+        app.logger.debug(f"Checking username: '{username}'...")
         user = User.query.filter_by(username=username).first()
         if user is None:
-            log.info(f"Unknown user. Redirecting to 'register'.")
+            app.logger.info(f"Unknown user. Redirecting to 'register'.")
             return redirect(url_for('register'))
         elif user.check_password(password) == 0:
             db.session.delete(user)
             return redirect(url_for('register'))
         elif not user.check_password(password):
             flash('Invalid username or password')
-            log.info('Invalid password!')
+            app.logger.info('Invalid password!')
             return redirect(url_for('login'))
-        log.info(f"Logging in db user: {user}. With username {username}")
+        app.logger.info(f"Logging in db user: {user}. With username {username}")
         login_user(user, remember=form.remember_me.data)
-        log.info(f"User '{current_user.username}' has logged in.")
+        app.logger.info(f"User '{current_user.username}' has logged in.")
         # Check for a next (page) URL argument
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
@@ -87,7 +95,7 @@ def login():
 
 @app.route('/logout')
 def logout():
-    log.info(f"User '{current_user.username}' has logged out.")
+    app.logger.info(f"User '{current_user.username}' has logged out.")
     logout_user()
     return redirect(url_for('index'))
 
@@ -131,7 +139,9 @@ def edit_profile():
 
 @app.route("/cart")
 def cart():
+    # app.logger.debug('CART TEST')
     # Temporary
+    Item = namedtuple('Item','foodID, name, price, description, image, options')
     cart = [
         Item("1", "Chicken", 10, "White meat", "/res/default.png", {}),
         Item("2", "Beef", 20, "Red meat", "/res/default.png", {}),

@@ -1,15 +1,15 @@
+# Don't know if anything in this file is used apart from: 
+# SQLALCHEMY_DATABASE_URI
+# SQLALCHEMY_TRACK_MODIFICATIONS
+# These (all?) can go in the .flaskenv file
+
 import os
 from dotenv import load_dotenv
-import logging as log
 
-from kiosk.utils import log_debug
-log_debug()
+
+load_dotenv("./.env")
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-log.debug(f"basedir set as {basedir}")
-
-log.debug("loading ./.env variables to Config.")
-load_dotenv("./.env")
 
 class Config(object):
     SECRET_KEY = os.getenv('SECRET_KEY') or 'you-will-never-guess'
