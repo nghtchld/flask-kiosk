@@ -66,3 +66,4 @@ TODO Ordering system using flask-sqlalchemy Classes
 ## Fixes needed
 * change menu_list in route /menu to namedtuple
 * change menu.html for item loop to use namedtuple names in place of list [ints]
+* Get Flash messages working on all templates - create a _flash.html.jinja to include in other templates it needs to have format of {{% flash}} in template.html...

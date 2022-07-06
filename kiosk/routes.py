@@ -16,8 +16,9 @@ from kiosk.models import User, Food
 from kiosk.db_utils import init_food_table, register_user_in_db
 from kiosk.config import Config
 
-from kiosk.utils import log_debug, log_func, entering, exiting
-log_debug()
+from kiosk.utils import log_func, entering, exiting
+# from kiosk.utils import log_debug
+# log_debug()
 
 config = Config()
 
@@ -144,6 +145,7 @@ def edit_profile():
 def cart():
     # app.logger.debug('CART TEST')
     # Temporary
+    app.logger.info("Defining namedtuple.")
     Item = namedtuple('Item','foodID, name, price, description, image, options')
     cart = [
         Item("1", "Chicken", 10, "White meat", "/res/default.png", {}),
@@ -174,20 +176,21 @@ def menu_item(itemname):
     Details of the menu item with number to order selection form.
     """
     app.logger.info(f"Selecting item from db: '{itemname}'...")
-    item = Food.query.filter_by(item=itemname).first()
-    if not item:        
+    food = Food.query.filter_by(item=itemname).first_or_404()
+    if not food:        
         app.logger.debug(f"Sorry! Sold out of '{itemname}. Please select a different item.")
-    app.logger.info(f"Retrieved item from db: '{item}'.")
-    title = ' '.join('Order your', item.item)
+    app.logger.info(f"Retrieved item from db")#: '{food}', name: {food.item}.")
+    #title = ' '.join('Order your', food.item)
 
     form = MenuItemForm(default=itemname)
     if form.validate_on_submit():
         name = form.foodname.data
         number = form.number.data
-        price = item.price.data
+        price = food.price.data
+        app.logger.debug(f"name: {name}, number: {number}, price: {price}")
         cost = number * price
         flash(f"{number} {name}s added to your cart. That will cost ${cost}.")
-    return render_template("menu_item.html.jinja", title=title, form=form)
+    return render_template("menu_item.html.jinja", title="Order Menu Item", form=form)
     pass
 
 @app.route("/cart/<int:id>")

@@ -3,9 +3,9 @@ from sqlalchemy import Integer
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, TextAreaField, SelectField, HiddenField
 from wtforms.validators import ValidationError, DataRequired, Length, Email, EqualTo
 from kiosk.models import User, Food
-from kiosk.utils import log_debug, log_func, entering, exiting
-
-@log_func(entering, exiting)
+from kiosk.utils import log_func, entering, exiting
+# from kiosk.utils import log_debug
+# log_debug()
 
 class EmptyForm(FlaskForm):
     submit = SubmitField('Submit')
@@ -31,6 +31,7 @@ class RegisterForm(FlaskForm):
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Register')
 
+    @log_func(entering, exiting)
     def validate_username(self, username):
         excluded_chars = " ,*?!'^+%&/()=}][{$#/\\\""
         for char in self.username.data:
@@ -38,11 +39,13 @@ class RegisterForm(FlaskForm):
                 raise ValidationError(
                     f"Character {char} is not allowed in username.")
 
+    @log_func(entering, exiting)
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
         if user is not None:
             raise ValidationError('Please use a different username.')
 
+    @log_func(entering, exiting)
     def validate_email(self, email):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
@@ -59,6 +62,7 @@ class EditProfileForm(FlaskForm):
         super(EditProfileForm, self).__init__(*args, **kwargs)
         self.original_username = original_username
 
+    @log_func(entering, exiting)
     def validate_username(self, username):
         if username.data != self.original_username:
             user = User.query.filter_by(username=self.username.data).first()

@@ -1,10 +1,6 @@
 {% extends "template.html.jinja" %}
 
-{% if title %}
-    {% block title %}{{ title }}{% endblock %}
-{% else %}
-    {% block title %}Menu Details{% endblock %}
-{% endif %}
+{% block title %} Order Menu Item {% endblock %}
 
 {% block content %}
     {% if item %}
