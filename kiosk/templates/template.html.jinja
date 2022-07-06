@@ -22,23 +22,15 @@
         {% endif %}
         <a class="right-nav" id="themeToggleButton">Light Theme</a>
     </div>
-    <hr>
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <ul>
-            {% for message in messages %}
-            <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        {% endwith %}
-    {% block beforecontent %}{% endblock %}
     <div class="overflow">
         <div class="wrapper">
             <div class="content">
                 {% if err %}
                     <span class="error">{{ err }}</span><br>
                 {% endif %}
+
+                {% block beforecontent %}{% endblock %}
+
                 {% block content %}
                     {% if content %}
                         {{ content }}
@@ -51,6 +43,18 @@
                             If this problem persists, please contact the site administrator.
                         </span>
                     {% endif %}
+                {% endblock %}
+
+                {% block aftercontent %}
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                    <ul>
+                        {% for message in messages %}
+                        <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% endwith %}
                 {% endblock %}
             </div>
         </div>

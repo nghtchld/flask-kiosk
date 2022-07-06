@@ -3,12 +3,10 @@ from kiosk import db
 
 import os
 import sys
-import logging as log
 from datetime import datetime
 from collections import namedtuple
 from flask import render_template, redirect, make_response, flash, url_for, session, send_from_directory, request
 from flask_login import current_user, login_user, logout_user, login_required
-from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.urls import url_parse
 
 from kiosk.forms import LoginForm, RegisterForm, EditProfileForm, MenuItemForm
@@ -45,7 +43,8 @@ def index():
         username = user.username
     else:
         username = "Stranger"
-    app.logger.debug(f"index.html username is: {username}")
+    app.logger.debug(f"/index username is: {username}")
+    flash('Test FLASH message!')
     return render_template("index.html.jinja", title="Home", username=username)
 
 
@@ -79,7 +78,7 @@ def login():
         if user is None:
             app.logger.info(f"Unknown user. Redirecting to 'register'.")
             return redirect(url_for('register'))
-        elif user.check_password(password) == 0:
+        elif user.password_hash is None or len(user.password_hash) == 0:
             db.session.delete(user)
             return redirect(url_for('register'))
         elif not user.check_password(password):
@@ -114,6 +113,7 @@ def favicon():
 @app.route('/userpage/<username>')
 @login_required
 def userpage(username):
+    app.logger.info("/userpage retrieving user.")
     user = User.query.filter_by(username=username).first_or_404()
     # TODO add list of user's orders, favorites etc using a _sub template
     # below are temp placeholder 'orders' by user 'user'
@@ -128,6 +128,7 @@ def userpage(username):
 @app.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
+    app.logger.info("/edit_profile creating form.")
     form = EditProfileForm(current_user.username)
     if form.validate_on_submit():
         current_user.username = form.username.data
@@ -145,7 +146,7 @@ def edit_profile():
 def cart():
     # app.logger.debug('CART TEST')
     # Temporary
-    app.logger.info("Defining namedtuple.")
+    app.logger.info("/cart defining namedtuple.")
     Item = namedtuple('Item','foodID, name, price, description, image, options')
     cart = [
         Item("1", "Chicken", 10, "White meat", "/res/default.png", {}),
@@ -177,20 +178,20 @@ def menu_item(itemname):
     """
     app.logger.info(f"Selecting item from db: '{itemname}'...")
     food = Food.query.filter_by(item=itemname).first_or_404()
-    if not food:        
+    if not food:
         app.logger.debug(f"Sorry! Sold out of '{itemname}. Please select a different item.")
     app.logger.info(f"Retrieved item from db")#: '{food}', name: {food.item}.")
     #title = ' '.join('Order your', food.item)
 
     form = MenuItemForm(default=itemname)
     if form.validate_on_submit():
-        name = form.foodname.data
+        name = food.item
         number = form.number.data
-        price = food.price.data
+        price = round(food.price, 2)
         app.logger.debug(f"name: {name}, number: {number}, price: {price}")
         cost = number * price
         flash(f"{number} {name}s added to your cart. That will cost ${cost}.")
-    return render_template("menu_item.html.jinja", title="Order Menu Item", form=form)
+    return render_template("menu_item.html.jinja", title="Order Menu Item", form=form, food=food)
     pass
 
 @app.route("/cart/<int:id>")

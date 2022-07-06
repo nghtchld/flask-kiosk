@@ -1,8 +1,8 @@
 *.log
 .env
 /.vscode
-/__pycache__
-*/__pycache__
+__pycache__/
+**/__pycache__/
 /deps
 *.db*
 scratch.py

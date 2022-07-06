@@ -71,7 +71,6 @@ class EditProfileForm(FlaskForm):
 
 
 class MenuItemForm(FlaskForm):
-    number = SelectField('Number', choices=[i for i in range(10)], default=1, coerce=int, 
-                        validators=[DataRequired(), Length(min=1, max=2)])
-    foodname = HiddenField(validators=[DataRequired(), Length(min=1, max=64)])
+    number = SelectField('Number', choices=[i for i in range(10)], default=1, coerce=int)
+    foodname = HiddenField()
     submit = SubmitField('Submit')
